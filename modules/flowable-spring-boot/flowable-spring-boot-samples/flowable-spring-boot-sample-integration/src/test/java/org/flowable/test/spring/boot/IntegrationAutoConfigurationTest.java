@@ -28,7 +28,6 @@ import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.support.GenericHandler;
 import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.web.client.RestTemplate;
 
 /**
  * Test the Spring Integration inbound inboundGateway support.
@@ -123,10 +122,10 @@ public class IntegrationAutoConfigurationTest {
             IntegrationAutoConfiguration.class })
     public static class BaseConfiguration {
 
-        @Bean
-        public RestTemplate restTemplate() {
-            return new RestTemplate();
-        }
+//        @Bean
+//        public RestTemplate restTemplate() {
+//            return new RestTemplate();
+//        }
 
         @Bean
         public TaskExecutor taskExecutor() {

@@ -17,7 +17,6 @@
     <modules>
         <module>flowable-spring-boot-starters</module>
         <module>flowable-spring-boot-samples</module>
-
     </modules>
 
     <properties>
@@ -25,10 +24,11 @@
         <flowable.artifact>
             org.flowable.spring.boot
         </flowable.artifact>
-
-        <spring.boot.version>1.2.6.RELEASE</spring.boot.version>
-        <!--<spring.framework.version>${spring.framework.version}</spring.framework.version>-->
-
+        <spring.boot.version>2.0.0.M1</spring.boot.version>
+        
+        <!-- Manually overriding the version from the parent root pom -->
+        <spring.framework.version>5.0.0.RC1</spring.framework.version>
+        <jackson.version>2.9.0.pr3</jackson.version>        
     </properties>
 
     <dependencyManagement>
@@ -86,7 +86,7 @@
             <name>Spring Milestones</name>
             <url>http://repo.spring.io/milestone</url>
             <snapshots>
-                <enabled>false</enabled>
+                <enabled>true</enabled>
             </snapshots>
         </repository>
     </repositories>
@@ -104,7 +104,7 @@
             <name>Spring Milestones</name>
             <url>http://repo.spring.io/milestone</url>
             <snapshots>
-                <enabled>false</enabled>
+                <enabled>true</enabled>
             </snapshots>
         </pluginRepository>
     </pluginRepositories>

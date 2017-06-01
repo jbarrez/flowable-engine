@@ -1,4 +1,4 @@
-package flowable;
+package org.flowable;
 
 import java.util.Collections;
 

@@ -9,18 +9,17 @@ import org.flowable.spring.boot.actuate.endpoint.ProcessEngineEndpoint;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.EndpointWebMvcAutoConfiguration;
-import org.springframework.boot.actuate.autoconfigure.ManagementServerPropertiesAutoConfiguration;
+import org.springframework.boot.actuate.autoconfigure.ManagementWebSecurityAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.MetricFilterAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.MetricRepositoryAutoConfiguration;
+import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.web.DispatcherServletAutoConfiguration;
-import org.springframework.boot.autoconfigure.web.EmbeddedServletContainerAutoConfiguration;
-import org.springframework.boot.autoconfigure.web.HttpMessageConvertersAutoConfiguration;
-import org.springframework.boot.autoconfigure.web.ServerPropertiesAutoConfiguration;
-import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
-import org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext;
-import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer;
+import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
+import org.springframework.boot.web.server.WebServerFactoryCustomizer;
+import org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext;
+import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -36,9 +35,8 @@ import org.springframework.web.client.RestTemplate;
 public class EndpointAutoConfigurationTest {
 
     @Configuration
-    @Import({ EmbeddedServletContainerAutoConfiguration.class,
+    @Import({ ServletWebServerFactoryAutoConfiguration.class,
             DispatcherServletAutoConfiguration.class,
-            ServerPropertiesAutoConfiguration.class,
             HttpMessageConvertersAutoConfiguration.class,
             WebMvcAutoConfiguration.class })
     public static class EmbeddedContainerConfiguration {
@@ -46,13 +44,15 @@ public class EndpointAutoConfigurationTest {
 
     @Configuration
     @Import({ DataSourceAutoConfiguration.class,
-            MetricFilterAutoConfiguration.class, EndpointWebMvcAutoConfiguration.class,
-            ManagementServerPropertiesAutoConfiguration.class,
+            MetricFilterAutoConfiguration.class, 
+            EndpointWebMvcAutoConfiguration.class,
+            ManagementWebSecurityAutoConfiguration.class,
             MetricRepositoryAutoConfiguration.class,
             DataSourceProcessEngineAutoConfiguration.DataSourceProcessEngineConfiguration.class,
             EndpointAutoConfiguration.class })
+    @PropertySource("test-actuator-endpoint.properties")
     public static class EndpointConfiguration {
-
+        
         @Bean
         public RestTemplate restTemplate() {
             return new RestTemplate();
@@ -62,7 +62,7 @@ public class EndpointAutoConfigurationTest {
     @Test
     public void mvcEndpoint() throws Throwable {
 
-        AnnotationConfigEmbeddedWebApplicationContext applicationContext = new AnnotationConfigEmbeddedWebApplicationContext(CallbackEmbeddedContainerCustomizer.class, EmbeddedContainerConfiguration.class, EndpointConfiguration.class);
+        AnnotationConfigServletWebServerApplicationContext applicationContext = new AnnotationConfigServletWebServerApplicationContext(CallbackEmbeddedContainerCustomizer.class, EmbeddedContainerConfiguration.class, EndpointConfiguration.class);
 
         ProcessEngine processEngine = applicationContext.getBean(ProcessEngine.class);
         org.junit.Assert.assertNotNull("the processEngine should not be null", processEngine);
@@ -74,7 +74,7 @@ public class EndpointAutoConfigurationTest {
 
         CallbackEmbeddedContainerCustomizer container = applicationContext.getBean(CallbackEmbeddedContainerCustomizer.class);
 
-        ResponseEntity<Map> mapResponseEntity = restTemplate.getForEntity("http://localhost:"+ container.getPortNumber() +"/flowable/", Map.class);
+        ResponseEntity<Map> mapResponseEntity = restTemplate.getForEntity("http://localhost:"+ container.getPortNumber() +"/application/flowable/", Map.class);
 
         Map map = mapResponseEntity.getBody();
 
@@ -91,14 +91,14 @@ public class EndpointAutoConfigurationTest {
     @PropertySource(
             value = {"classpath:properties/${property:defaultValue}.properties"},
             ignoreResourceNotFound = true)
-    public static class CallbackEmbeddedContainerCustomizer implements EmbeddedServletContainerCustomizer {
+    public static class CallbackEmbeddedContainerCustomizer implements WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> { 
 
         @Value("${portNumber:9091}")
         protected int portNumber;
-
+        
         @Override
-        public void customize(ConfigurableEmbeddedServletContainer container) {
-            container.setPort(portNumber);
+        public void customize(ConfigurableServletWebServerFactory configurableServletWebServerFactory) {
+            configurableServletWebServerFactory.setPort(portNumber);
         }
 
         public int getPortNumber() {
